@@ -79,6 +79,14 @@ select,input[type=number],input[type=text],textarea{font-family:inherit;font-siz
 @keyframes blink{50%{opacity:0}}
 #ann.race{background:linear-gradient(90deg,#063,#0a4);border-color:#fff}
 #ann.puzzle{background:linear-gradient(90deg,#0b4f5c,#0b7285,#0b4f5c);border-color:var(--cyan)}
+#ann.gacha{background:linear-gradient(90deg,#3b2a00,#7a5800,#3b2a00);border-color:#ffd23f}
+#ann.r-N{background:#2d3a4a;border-color:#adb5bd} #ann.r-R{background:#0b3d91;border-color:#4dabf7}
+#ann.r-SR{background:#5f1f8f;border-color:#da77f2;box-shadow:0 0 30px #da77f2aa}
+#ann.r-SSR{background:linear-gradient(90deg,#ff2e4d,#ff922b,#ffd23f,#42f58d,#3ee6ff,#a77bff,#ff2e4d);background-size:300% 100%;animation:rainbow 1.2s linear infinite;border-color:#fff;box-shadow:0 0 40px #fff8}
+#ann.r-SSR #annMain,#ann.r-SSR #annSub{color:#fff;text-shadow:0 2px 0 #000,0 0 12px #000}
+#ann.capsule #annMain{display:inline-block;animation:capsule .35s ease-in-out infinite alternate}
+@keyframes capsule{from{transform:rotate(-14deg) scale(.95)}to{transform:rotate(14deg) scale(1.08)}}
+@keyframes rainbow{to{background-position:300% 0}}
 #ann.card{background:linear-gradient(90deg,#3a0f66,#6a1fb0,#3a0f66);border-color:#f5c542}
 
 /* ===== Stage / Classroom ===== */
@@ -103,6 +111,12 @@ select,input[type=number],input[type=text],textarea{font-family:inherit;font-siz
   --seat-bg:#000;--seat-fg:#fff;--seat-bd:#fff;font-family:var(--ff-pixel)}
 .theme-race{background:repeating-linear-gradient(90deg,#2b8a3e 0 70px,#2f9e44 70px 140px);--seat-bg:#fff;--seat-fg:#0b2a12;--seat-bd:#145a26}
 .theme-card{background:radial-gradient(circle at 50% 30%,#55208a,#1a0630 75%);--seat-bg:#fffbea;--seat-fg:#2b0b45;--seat-bd:#f5c542}
+.theme-gacha{background:radial-gradient(circle at 50% 20%,#4a3600,#140d00 75%);--seat-bg:#fff8e1;--seat-fg:#3b2a00;--seat-bd:#ffb703}
+.theme-gacha #board{background:#2b2100;border-color:#ffd23f}
+.theme-gacha .seat-label{color:#b06b00}
+.rar{display:inline-block;border-radius:6px;padding:0 .35em;font-weight:800;color:#fff;margin-right:.2em}
+.rar.N{background:#868e96}.rar.R{background:#1c7ed6}.rar.SR{background:#ae3ec9}
+.rar.SSR{background:linear-gradient(90deg,#ff2e4d,#ffd23f,#42f58d,#3ee6ff,#a77bff)}
 .theme-puzzle{background-color:#06303a;background-image:radial-gradient(#ffffff14 1.5px,transparent 1.5px);background-size:26px 26px;--seat-bg:#f1fbff;--seat-fg:#08343f;--seat-bd:#3ee6ff}
 .theme-puzzle #board{background:#0b4f5c;border-color:#3ee6ff}
 .theme-puzzle .seat-label{color:#0b7285}
@@ -197,6 +211,19 @@ select,input[type=number],input[type=text],textarea{font-family:inherit;font-siz
 #seatMap button{background:#fff;color:#111;border-radius:7px;padding:7px 0;font-weight:800;font-size:13px;border:2px solid #fff}
 #seatMap button.off{background:#ff2e4d44;color:#ff8fa0;border:2px dashed #ff8fa0}
 .sm-front{max-width:560px;text-align:center;background:#1f5b3a;border-radius:6px;font-weight:800;font-size:13px;padding:2px}
+
+/* 小さい席：枠を細く・ラベルを隠して名前を大きく */
+#grid.tiny .face{border-width:2px !important;padding:1px 2px;border-radius:8px}
+#grid.nolabel .seat-label,#grid.nolabel .seat-meta{display:none}
+#grid.nolabel .stamp{display:none}
+/* 宝さがし・ルーレット */
+.hc-mark{position:absolute;right:3px;top:3px;z-index:3;font-size:calc(var(--sub-size)*1.05);font-weight:800;border-radius:999px;padding:0 .45em;
+  color:#fff;box-shadow:0 2px 0 #0006;animation:pop .4s cubic-bezier(.3,1.6,.5,1);pointer-events:none;white-space:nowrap}
+.hc-mark.d1{background:#e03131}.hc-mark.d2{background:#f76707}.hc-mark.d3{background:#f59f00}.hc-mark.d4{background:#1c7ed6}
+.seat.treasure .face.front{animation:spotPulse .4s infinite alternate;border-color:#ffd23f !important}
+#grid.hunting .seat:not(.empty){cursor:crosshair}
+.seat.pick .face.front{box-shadow:0 0 0 6px #ffd23f,0 0 50px #ffd23f !important;transform:scale(1.06);z-index:7}
+.seat.scan .face.front{box-shadow:0 0 0 5px #fff,0 0 30px #fff !important}
 
 /* race tokens */
 .token{position:absolute;left:0;top:0;display:flex;align-items:center;gap:4px;padding:3px 10px 3px 4px;border-radius:999px;background:var(--c);color:#fff;
@@ -301,6 +328,23 @@ body.focus #controlbar,body.focus #afterbar{display:none !important}
 /* 縦長の小さい画面でもスクロールできる */
 #modes::-webkit-scrollbar{height:6px} #modes::-webkit-scrollbar-thumb{background:#ffffff40;border-radius:3px}
 
+/* ===== 横幅が中くらいの画面（Chromebook 1366px など）：1行に収める ===== */
+@media (max-width:1700px){ #afterbar .hint{display:none} }
+@media (max-width:1500px) and (min-width:701px){
+  .mode-btn{padding:4px 9px;font-size:14px;gap:4px;border-width:2px}
+  .mode-btn .ic{font-size:1.25em}
+  #modes{gap:5px}
+  .ctrl-right{gap:6px}
+  .ctrl-right select{font-size:14px;padding:4px 4px}
+  #btnStart{font-size:20px;padding:5px 16px}
+  .act-btn{padding:7px 11px;font-size:14px}
+  #afterbar{gap:7px}
+}
+@media (max-width:1200px) and (min-width:701px){
+  .ctrl-right label{font-size:0;gap:0}
+  .mode-btn{font-size:13px;padding:4px 7px}
+}
+
 /* ===== 高さが低い画面（Chromebook・ノートPC・ブラウザ枠つき） ===== */
 @media (max-height:760px){
   #topbar{padding:4px 12px}
@@ -322,6 +366,7 @@ body.focus #controlbar,body.focus #afterbar{display:none !important}
 
 /* ===== スマホ縦・小さい画面 ===== */
 @media (max-width:700px){
+  .act-btn{min-width:0}
   body{height:auto;min-height:100dvh;overflow-y:auto;overscroll-behavior:auto}
   #topbar{flex-wrap:nowrap;gap:6px;padding:6px 8px;position:sticky;top:0;z-index:50}
   #logo{font-size:15px;letter-spacing:0}
@@ -416,6 +461,7 @@ body.focus #controlbar,body.focus #afterbar{display:none !important}
     <button class="mode-btn" data-mode="race" style="--mc:#42f58d"><span class="ic">🏇</span>競馬レース</button>
     <button class="mode-btn" data-mode="card" style="--mc:#a77bff"><span class="ic">🃏</span>一括オープン</button>
     <button class="mode-btn" data-mode="puzzle" style="--mc:#ff922b"><span class="ic">🧩</span>推理パズル</button>
+    <button class="mode-btn" data-mode="gacha" style="--mc:#ffd23f"><span class="ic">🎁</span>席ガチャ</button>
   </div>
   <div class="ctrl-right">
     <label>スピード
@@ -479,6 +525,8 @@ body.focus #controlbar,body.focus #afterbar{display:none !important}
   <button class="act-btn y" id="btnBuff">✨ 席の称号を付与</button>
   <button class="act-btn p" id="btnTrade">🎫 席トレード権 抽選</button>
   <button class="act-btn c" id="btnSwap">🔄 席を入れ替え</button>
+  <button class="act-btn" id="btnPick" style="background:#ff922b">🎯 指名ルーレット</button>
+  <button class="act-btn" id="btnHunt" style="background:#b197fc">💎 宝さがし</button>
   <button class="act-btn g" id="btnExport">📄 座席表を出力</button>
 </section>
 
@@ -525,9 +573,15 @@ body.focus #controlbar,body.focus #afterbar{display:none !important}
     <textarea id="setNames"></textarea>
     <div class="frow">
       <span id="nameCount" style="font-weight:800"></span>
-      <button class="btn small" id="setDummy">ダミー名簿（30名）に戻す</button>
       <button class="btn small" id="setClear">クリア</button>
     </div>
+    <div class="frow">
+      <label>🎲 ダミー生徒 <input type="number" id="dummyN" min="1" max="80" value="30"> 人</label>
+      <button class="btn small primary" id="setDummy">ダミー名簿を作る</button>
+      <button class="btn small" id="setAdd5">＋5人追加</button>
+      <button class="btn small" id="setNumbers">出席番号で作る（1番〜）</button>
+    </div>
+    <p class="note">「出席番号で作る」は名前を出したくないときに。人数に合わせて列数×行数も自動で広げます。</p>
     <h3>座席レイアウト</h3>
     <div class="frow">
       <label>横の列数 <input type="number" id="setCols" min="1" max="10"></label>
@@ -658,7 +712,7 @@ const DEFAULT_NAMES = [
   '橋本 新', '林 杏', '藤田 朝陽', '松本 凛', '三浦 翔', '森 楓', '山口 奏太', '山本 結衣', '吉田 晴', '渡辺 澪'
 ];
 const SPEED = { slow: 1.5, normal: 1, fast: 0.55, turbo: 0.25 };
-const MODE_KEYS = ['death', 'rpg', 'race', 'card', 'puzzle'];
+const MODE_KEYS = ['death', 'rpg', 'race', 'card', 'puzzle', 'gacha'];
 const STORE_KEY = 'sekigae-fes-v1';
 // 動きを減らす設定の端末・非力な端末（Chromebookなど）では紙吹雪を控えめに
 const LITE = (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || (navigator.hardwareConcurrency || 8) <= 4;
@@ -934,8 +988,15 @@ function blankHTML(s) {
   if (mode === 'race') return `<div class="seat-num">🏁${s.i + 1}</div>`;
   return `<div class="seat-num">${s.i + 1}</div>`;
 }
+function rarityOf(s) {
+  if (S.specials[s.i]) return 'SSR';
+  if (s.r === 0 || s.c === windowCol()) return 'SR';
+  if (s.r === S.cfg.rows - 1 || s.c === hallCol()) return 'R';
+  return 'N';
+}
 function labelOf(s, mode) {
   if (mode === 'rpg') { const r = ROLES[S.roles[s.i]]; return `${r.icon} ${r.name}`; }
+  if (mode === 'gacha') { const sp = S.specials[s.i], r = rarityOf(s); return r === 'SSR' ? `🌈SSR ${sp.label}` : r === 'SR' ? '✨SR' : ''; }
   const sp = S.specials[s.i]; return sp ? `${sp.icon} ${sp.label}` : '';
 }
 function filledHTML(s) {
@@ -1028,6 +1089,8 @@ function layoutGrid() {
     Object.assign(el.style, { left: g.X[s.c] + 'px', top: (g.Y[s.r] + 10) + 'px', width: g.sw + 'px', height: g.sh + 'px' });
   });
   g.name = name;
+  grid.classList.toggle('tiny', g.sw < 80);
+  grid.classList.toggle('nolabel', g.sh < 46 || g.sw < 64);
   // 座席は黒板のすぐ下に寄せる（スマホ縦で上に大きなすき間ができないように）
   const y0 = g.Y[0], shift = Math.max(0, y0 - 4);
   if (shift) S.seatEls.forEach((el, i) => { el.style.top = (g.Y[S.seats[i].r] - shift + 10) + 'px'; });
@@ -1040,8 +1103,9 @@ function fitNames(root) {
   const g = S.geom; if (!g) return;
   root.querySelectorAll('.seat-name').forEach(el => {
     const t = el.textContent.trim(); if (!t) return;
-    const face = el.parentElement, extra = face.querySelectorAll('.seat-label,.seat-meta').length;
-    const sub = Math.max(9, g.name * 0.52), w = (g.sw - 22) * 0.94, h = g.sh - 16 - extra * sub * 1.25;
+    const face = el.parentElement, tiny = grid.classList.contains('tiny');
+    const extra = grid.classList.contains('nolabel') ? 0 : face.querySelectorAll('.seat-label,.seat-meta').length;
+    const sub = Math.max(9, g.name * 0.52), w = (g.sw - (tiny ? 8 : 22)) * 0.94, h = g.sh - (tiny ? 6 : 16) - extra * sub * 1.25;
     const parts = t.split(/\s+/), longest = Math.max(...parts.map(textLen));
     const one = Math.min(w / textLen(t), h * 0.8);
     const two = parts.length > 1 ? Math.min(w / longest, h / 2.4) : 0;
@@ -1103,11 +1167,12 @@ const MODE_INFO = {
   rpg: ['⚔️ RPGパーティ編成', '教室はダンジョン！ 座る場所でロール（職業）が決まる！'],
   race: ['🏇 席替え競馬', '全員一斉にスタート！ ゴールした順に席へ滑り込め！'],
   card: ['🃏 ドラマチック一括オープン', '運命のカードを一斉にめくれ！'],
-  puzzle: ['🧩 推理パズル席替え', '何人かの席はヒミツ！ ヒントから誰がどこか推理しよう！']
+  puzzle: ['🧩 推理パズル席替え', '何人かの席はヒミツ！ ヒントから誰がどこか推理しよう！'],
+  gacha: ['🎁 席ガチャ', '1人ずつガチャを回して席が決まる！ SSR席を引くのは誰だ！？']
 };
 const THEME_TEXT = {
   death: ['黒板', '教卓'], rpg: ['ボスのへや（黒板）', '👑 王座（教卓）'],
-  race: ['🏁 ゴール（黒板）', '教卓'], card: ['黒板', '🎩 ディーラー（教卓）'], puzzle: ['黒板', '🕵️ 探偵事務所（教卓）']
+  race: ['🏁 ゴール（黒板）', '教卓'], card: ['黒板', '🎩 ディーラー（教卓）'], puzzle: ['黒板', '🕵️ 探偵事務所（教卓）'], gacha: ['黒板', '🎰 ガチャ台（教卓）']
 };
 const REACTIONS = {
   front: ['最前線へようこそ！ 先生と目が合う確率200%！', 'VIP席（先生的に）確定！', '先生のすぐそば…集中力MAX席！'],
@@ -1451,7 +1516,32 @@ async function runPuzzle() {
   setAnn('🧩 全問終了！', `正解 ${PZ.stats.ok}問 ／ ヒント合計 ${PZ.stats.hints}個 ／ ハズレ ${PZ.stats.wrong}回`);
   await wait(1200);
 }
-const RUNNERS = { death: runDeath, rpg: runRpg, race: runRace, card: runCard, puzzle: runPuzzle };
+
+/* ---- 🎁 席ガチャ ---- */
+const RAR_TEXT = { N: 'ノーマル席', R: 'レア席', SR: 'スーパーレア席', SSR: '超激レア席！！' };
+async function runGacha() {
+  renderGrid('blank');
+  const occ = S.seats.filter(s => S.assign[s.i]);
+  const rank = { N: 0, R: 1, SR: 2, SSR: 3 };
+  // レアな席ほど後半に出る（最後はSSR）
+  const order = shuffle(occ.slice()).sort((a, b) => (rank[rarityOf(a)] + Math.random() * 2.2) - (rank[rarityOf(b)] + Math.random() * 2.2));
+  setAnn('🎁 席ガチャ スタート！', `全${order.length}回！ SSR席は ${occ.filter(s => rarityOf(s) === 'SSR').length} 席…！`);
+  await wait(1300);
+  for (let k = 0; k < order.length; k++) {
+    if (S.skip) return;
+    const s = order[k], r = rarityOf(s), name = S.assign[s.i], el = S.seatEls[s.i];
+    setAnn(pick(['🔴', '🔵', '🟡', '🟢', '🟣']), `${k + 1}回目のガチャ…`, 'capsule');
+    for (let t = 0; t < (r === 'SSR' ? 7 : r === 'SR' ? 4 : 2); t++) { SFX.tick(); await wait(110); }
+    if (S.skip) return;
+    if (r === 'SSR') { bigText('SSR', true, '#ffd23f'); SFX.siren(); await wait(900); if (S.skip) return; }
+    setAnn(`${name}`, `【${r}】${RAR_TEXT[r]}　${S.specials[s.i] ? S.specials[s.i].icon + ' ' + S.specials[s.i].label : seatDesc(s)}`, 'r-' + r);
+    fillSeat(s.i, 'pop');
+    if (r === 'SSR') { SFX.fanfare(); fx.at(el, 140); await wait(2200); }
+    else if (r === 'SR') { SFX.win(); fx.at(el, 40); await wait(1000); }
+    else { (r === 'R' ? SFX.coin : SFX.pop)(); await wait(r === 'R' ? 650 : 480); }
+  }
+}
+const RUNNERS = { death: runDeath, rpg: runRpg, race: runRace, card: runCard, puzzle: runPuzzle, gacha: runGacha };
 
 /* ===== 実行 ===== */
 function confirmDiscard() {
@@ -1466,6 +1556,7 @@ async function startShow() {
   const res = solve();
   if (!res.ok) { toast(res.error); return; }
   S.assign = res.assign; S.buffs = {}; S.tradeWinners = []; S.runMode = S.cfg.mode;
+  stopGames(); if (!$('#timerWidget').classList.contains('hidden')) $('#twClose').click();
   setSwap(false);
   S.phase = 'running'; S.skip = false; updateUI();
   try { await RUNNERS[S.runMode](); } catch (e) { console.error(e); }
@@ -1535,11 +1626,12 @@ function resetIdle() {
   S.cfg.result = null;
   S.phase = 'idle'; S.assign = []; S.buffs = {}; S.tradeWinners = []; S.runMode = null;
   setSwap(false); buildSeats(); applyTheme(); updateUI(); renderGrid('idle');
-  const [a, b] = MODE_INFO[S.cfg.mode]; setAnn(a, b + '　▶ スタートを押してね');
+  const [a, b] = MODE_INFO[S.cfg.mode]; setAnn(a, b + '　▶ スタートを押してね' + speedTip());
 }
+const speedTip = () => S.cfg.names.length > 40 && ['slow', 'normal'].includes(S.cfg.speed) ? '（人数が多いので スピード「はやい」もおすすめ）' : '';
 function setMode(m) {
   S.cfg.mode = m; saveCfg(); applyTheme(); updateUI();
-  if (S.phase === 'idle') { renderGrid('idle'); const [a, b] = MODE_INFO[m]; setAnn(a, b + '　▶ スタートを押してね'); }
+  if (S.phase === 'idle') { renderGrid('idle'); const [a, b] = MODE_INFO[m]; setAnn(a, b + '　▶ スタートを押してね' + speedTip()); }
   else { const [a, b] = MODE_INFO[m]; setAnn(a, b + '　▶「もう一度！」で この演出で席替え'); }
 }
 
@@ -1633,8 +1725,80 @@ async function assignBuffs() {
   buffBusy = false; $('#btnBuff').disabled = false;
 }
 
+/* ---- 🎯 指名ルーレット ---- */
+let pickBusy = false, picked = new Set();
+async function pickRoulette() {
+  if (pickBusy || S.phase !== 'done') return;
+  stopGames('pick');
+  let pool = S.seats.filter(s => S.assign[s.i] && !picked.has(S.assign[s.i]));
+  if (!pool.length) { picked = new Set(); pool = S.seats.filter(s => S.assign[s.i]); toast('全員1回ずつ当たったので、リセットしました'); }
+  pickBusy = true; $('#btnPick').disabled = true;
+  S.seatEls.forEach(el => el.classList.remove('pick'));
+  const win = pick(pool), all = S.seats.filter(s => S.assign[s.i]);
+  setAnn('🎯 指名ルーレット…', 'だれが当たる！？');
+  const steps = 26 + rand(0, 6); let prev = null;
+  for (let k = 0; k < steps; k++) {
+    let s = k === steps - 1 ? win : pick(all);
+    if (prev) S.seatEls[prev.i].classList.remove('scan');
+    S.seatEls[s.i].classList.add('scan'); prev = s; SFX.tick();
+    await new Promise(r => setTimeout(r, 45 + 330 * Math.pow(k / steps, 3)));
+    if (S.phase !== 'done') break;
+  }
+  if (prev) S.seatEls[prev.i]?.classList.remove('scan');
+  if (S.phase === 'done') {
+    picked.add(S.assign[win.i]);
+    S.seatEls[win.i].classList.add('pick'); SFX.fanfareShort(); fx.at(S.seatEls[win.i], 70);
+    setAnn(`🎯 ${S.assign[win.i]} さん！`, `当たった人 ${picked.size}/${all.length}（同じ人は全員が当たるまで出ません）`);
+  }
+  pickBusy = false; $('#btnPick').disabled = false;
+}
+
+/* ---- 💎 宝さがし（ホット＆コールド） ---- */
+const HUNT = { on: false, i: null, tries: 0 };
+function startHunt() {
+  if (S.phase !== 'done') return;
+  if (HUNT.on) { stopGames(); setAnn('💎 宝さがし 終了', ''); return; }
+  stopGames('hunt');
+  const occ = S.seats.filter(s => !S.dis[s.i]);
+  HUNT.on = true; HUNT.i = pick(occ).i; HUNT.tries = 0;
+  grid.classList.add('hunting');
+  $('#btnHunt').classList.add('active'); $('#btnHunt').textContent = '✋ 宝さがし終了';
+  SFX.encounter();
+  setAnn('💎 宝はどの席に隠れている…？', '席をタップ！ 🔥アツい＝近い ／ 🧊つめたい＝遠い　（みんなで順番に）');
+}
+function huntGuess(i) {
+  if (S.dis[i]) return;
+  const el = S.seatEls[i];
+  if (el.querySelector('.hc-mark')) return;
+  HUNT.tries++;
+  if (i === HUNT.i) {
+    el.classList.add('treasure');
+    el.insertAdjacentHTML('beforeend', '<div class="hc-mark d1" style="background:#ffd23f;color:#111">💎</div>');
+    SFX.win(); fx.big(); bigText('💎', false, '#ffd23f');
+    setAnn(`💎 発見！！ ${S.assign[i] ? S.assign[i] + ' さんの席' : 'この席'}！`, `${HUNT.tries}回目で見つかった！`);
+    HUNT.on = false; grid.classList.remove('hunting');
+    $('#btnHunt').classList.remove('active'); $('#btnHunt').textContent = '💎 もう一度 宝さがし';
+    return;
+  }
+  const a = S.seats[i], t = S.seats[HUNT.i], d = Math.max(Math.abs(a.r - t.r), Math.abs(a.c - t.c));
+  const [cls, txt, sub] = d <= 1 ? ['d1', '🔥🔥', 'アツアツ！ すぐとなり！！'] : d === 2 ? ['d2', '🔥', 'アツい！ 近いぞ！'] : d === 3 ? ['d3', '♨', 'あたたかい…'] : ['d4', '🧊', 'つめたい… 遠いよ'];
+  el.insertAdjacentHTML('beforeend', `<div class="hc-mark ${cls}">${txt}</div>`);
+  (d <= 1 ? SFX.siren : d === 2 ? SFX.coin : SFX.blip)();
+  setAnn(`${txt} ${sub}`, `${HUNT.tries}回目　｜　宝はまだ見つかっていない…`);
+}
+function stopGames(except) {
+  if (except !== 'hunt') {
+    HUNT.on = false; grid.classList.remove('hunting');
+    $('#btnHunt').classList.remove('active'); $('#btnHunt').textContent = '💎 宝さがし';
+    $$('.hc-mark').forEach(m => m.remove()); $$('.seat.treasure').forEach(el => el.classList.remove('treasure'));
+  }
+  if (except !== 'pick') $$('.seat.pick').forEach(el => el.classList.remove('pick'));
+  if (except !== 'swap' && S.swapMode) setSwap(false);
+}
+
 /* ---- 席の入れ替え ---- */
 function setSwap(on) {
+  if (on) stopGames('swap');
   S.swapMode = on; S.swapFirst = null;
   $$('.seat.swap-sel').forEach(el => el.classList.remove('swap-sel'));
   grid.classList.toggle('swapping', on);
@@ -2039,6 +2203,7 @@ function updateSettingsInfo() {
   const names = cleanNames($('#setNames').value.split(/\r?\n/));
   const [cols, rows] = setDims(), cap = draftCapacity();
   $('#nameCount').textContent = `👥 ${names.length} 名`;
+  if (document.activeElement !== $('#dummyN')) $('#dummyN').value = names.length || 30;
   $('#seatCount').textContent = `🪑 使える席 ${cap} 席（${cols}列 × ${rows}行${cols * rows - cap ? `、使わない席 ${cols * rows - cap}` : ''}）`;
   const w = $('#seatWarn');
   if (names.length > cap) { w.textContent = `⚠ 席が ${names.length - cap} 席足りません！ 列数・行数を増やすか、使わない席を減らしてください`; w.classList.remove('hidden'); }
@@ -2049,6 +2214,7 @@ function openSettings() {
   $('#setNames').value = S.cfg.names.join('\n');
   $('#setCols').value = S.cfg.cols; $('#setRows').value = S.cfg.rows;
   $('#setLayout').value = S.cfg.layout; $('#setWindow').value = S.cfg.windowSide;
+  $('#dummyN').value = S.cfg.names.length;
   draftOff = new Set(S.cfg.disabled);
   renderSeatMap(); openModal('#settingsModal');
 }
@@ -2121,7 +2287,39 @@ $('#btnSettings').addEventListener('click', openSettings);
 $('#setNames').addEventListener('input', updateSettingsInfo);
 $('#setCols').addEventListener('input', renderSeatMap);
 $('#setRows').addEventListener('input', renderSeatMap);
-$('#setDummy').addEventListener('click', () => { $('#setNames').value = DEFAULT_NAMES.join('\n'); updateSettingsInfo(); });
+// ダミー生徒の自動生成
+const SURNAMES = ['青木', '石川', '伊藤', '上田', '遠藤', '大野', '岡田', '加藤', '川口', '木村', '小林', '斎藤', '佐々木', '佐藤', '清水', '鈴木', '高橋', '田中', '中村', '西村',
+  '橋本', '林', '藤田', '松本', '三浦', '森', '山口', '山本', '吉田', '渡辺', '池田', '井上', '小川', '金子', '近藤', '坂本', '原', '福田', '前田', '村上', '中島', '野口', '長谷川', '平野', '堀', '宮崎', '矢野', '和田'];
+const GIVEN = ['蓮', '陽葵', '湊', '結菜', '大和', '芽依', '悠真', 'さくら', '颯太', '美咲', '陸', '莉子', '海斗', '心春', '蒼', '葵', '樹', 'ひなた', '律', '紬',
+  '新', '杏', '朝陽', '凛', '翔', '楓', '奏太', '結衣', '晴', '澪', '陽翔', '芽生', '湊斗', '咲良', '大翔', '花', '悠斗', '美月', '蒼空', '詩', '颯', '琴音', '律希', 'ゆい', '暖', '千尋', '奏', 'すず', '健太', '優奈'];
+function dummyNames(n, existing = []) {
+  const out = [], used = new Set(existing);
+  for (const nm of DEFAULT_NAMES) { if (out.length >= n) break; if (!used.has(nm)) { out.push(nm); used.add(nm); } }
+  let guard = 0;
+  while (out.length < n && guard++ < 20000) { const nm = `${pick(SURNAMES)} ${pick(GIVEN)}`; if (!used.has(nm)) { out.push(nm); used.add(nm); } }
+  return out;
+}
+// 人数が席数をこえたら列数・行数を自動で広げる
+function growGridFor(n) {
+  let [cols, rows] = setDims();
+  while (draftCapacityFor(cols, rows) < n && (cols < 10 || rows < 8)) { if (cols <= rows + 1 && cols < 10) cols++; else if (rows < 8) rows++; else cols++; }
+  $('#setCols').value = cols; $('#setRows').value = rows; renderSeatMap();
+}
+function draftCapacityFor(cols, rows) { let k = 0; for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) if (!draftOff.has(r + '-' + c)) k++; return k; }
+const curNames = () => cleanNames($('#setNames').value.split(/\r?\n/));
+$('#setDummy').addEventListener('click', () => {
+  const n = Math.max(1, Math.min(80, +$('#dummyN').value || 30)); $('#dummyN').value = n;
+  $('#setNames').value = dummyNames(n).join('\n'); growGridFor(n); updateSettingsInfo();
+});
+$('#setAdd5').addEventListener('click', () => {
+  const cur = curNames(), add = Math.min(5, 80 - cur.length);
+  if (add <= 0) { toast('最大80人までです'); return; }
+  $('#setNames').value = cur.concat(dummyNames(add, cur).slice(0, add)).join('\n'); growGridFor(cur.length + add); updateSettingsInfo();
+});
+$('#setNumbers').addEventListener('click', () => {
+  const n = Math.max(1, Math.min(80, +$('#dummyN').value || curNames().length || 30));
+  $('#setNames').value = Array.from({ length: n }, (_, k) => `${k + 1}番`).join('\n'); growGridFor(n); updateSettingsInfo();
+});
 $('#setClear').addEventListener('click', () => { $('#setNames').value = ''; updateSettingsInfo(); });
 $('#setSave').addEventListener('click', saveSettings);
 
@@ -2141,11 +2339,13 @@ grid.addEventListener('click', e => {
   const i = +el.dataset.i;
   if (S.phase === 'running' && PZ.target !== null) { pzGuess(i); return; }
   if (S.phase !== 'done') return;
-  if (S.swapMode) handleSwap(i); else openMission(i);
+  if (HUNT.on) huntGuess(i); else if (S.swapMode) handleSwap(i); else openMission(i);
 });
 $('#mcReroll').addEventListener('click', () => { if (missionSeat !== null) openMission(missionSeat); });
 
 $('#btnBuff').addEventListener('click', assignBuffs);
+$('#btnPick').addEventListener('click', pickRoulette);
+$('#btnHunt').addEventListener('click', startHunt);
 $('#btnSwap').addEventListener('click', () => { setSwap(!S.swapMode); if (!S.swapMode) setAnn('✅ 入れ替え終了', '席をタップするとシークレット・ミッション！'); });
 $('#btnTrade').addEventListener('click', openTrade);
 $('#tradeDraw').addEventListener('click', drawTrade);
