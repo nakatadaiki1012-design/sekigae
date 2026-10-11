@@ -171,6 +171,16 @@ select,input[type=number],input[type=text],textarea{font-family:inherit;font-siz
 .seat.deal{animation:deal .55s cubic-bezier(.2,.9,.3,1.2) backwards;animation-delay:var(--dd,0s)}
 @keyframes deal{0%{transform:translate(0,-70vh) rotate(-40deg);opacity:0}100%{transform:none;opacity:1}}
 .seat.shake,#grid.shaking .seat{animation:shake .11s infinite}
+/* じらし演出 */
+#stage::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:25;opacity:0;transition:opacity .6s;
+  background:radial-gradient(ellipse at center,transparent 25%,#000d 80%)}
+body.tense #stage::after{opacity:1}
+body.tense #ann{animation:hbPulse .75s infinite}
+@keyframes hbPulse{0%,100%{transform:scale(1)}15%{transform:scale(1.025)}30%{transform:scale(1)}45%{transform:scale(1.015)}}
+#ann.glitch #annMain{animation:glitch .1s steps(2) 8;text-shadow:4px 0 #ff2e4d,-4px 0 #3ee6ff}
+@keyframes glitch{0%{transform:translate(3px,0) skewX(10deg)}50%{transform:translate(-4px,2px) skewX(-8deg)}100%{transform:none}}
+#ann.fake #annMain{text-decoration:line-through;text-decoration-color:var(--red);text-decoration-thickness:.12em;opacity:.7}
+.seat.peek .seat-inner{transform:rotateY(84deg) !important;transition:transform .35s ease !important}
 @keyframes shake{0%{transform:translate(1px,-1px) rotate(-1deg)}50%{transform:translate(-2px,1px) rotate(1.5deg)}100%{transform:translate(1px,1px) rotate(-.5deg)}}
 
 .buff-badge{position:absolute;top:-11px;left:50%;transform:translateX(-50%);z-index:4;background:var(--yellow);color:#222;border-radius:999px;padding:1px 9px;
@@ -370,6 +380,7 @@ body.focus #controlbar,body.focus #afterbar{display:none !important}
   .act-btn{padding:7px 11px;font-size:14px}
   #afterbar{gap:7px}
 }
+@media (max-width:1500px) and (min-width:701px){ .ctrl-right label{font-size:0;gap:0} }
 @media (max-width:1200px) and (min-width:701px){
   .ctrl-right label{font-size:0;gap:0}
   .mode-btn{font-size:13px;padding:4px 7px}
@@ -497,10 +508,17 @@ body.focus #controlbar,body.focus #afterbar{display:none !important}
   <div class="ctrl-right">
     <label>スピード
       <select id="speedSel">
-        <option value="slow">ゆっくり</option>
-        <option value="normal">ふつう</option>
-        <option value="fast">はやい</option>
-        <option value="turbo">爆速</option>
+        <option value="slow">🐢 ゆっくり</option>
+        <option value="normal">▶ ふつう</option>
+        <option value="fast">⏩ はやい</option>
+        <option value="turbo">⚡ 爆速</option>
+      </select>
+    </label>
+    <label id="teaseWrap" title="もったいぶる度合い">じらし
+      <select id="teaseSel">
+        <option value="0">じらし なし</option>
+        <option value="1">じらし ふつう</option>
+        <option value="2">じらし MAX🔥</option>
       </select>
     </label>
     <label id="cardOptWrap">開け方
@@ -783,7 +801,7 @@ const S = {
   cfg: {
     names: DEFAULT_NAMES.slice(), cols: 6, rows: 5, layout: 'normal', windowSide: 'left', className: '2年3組',
     frontFixed: [], frontRows: 2, pairs: [], avoidLast: true, muted: false, speed: 'normal', cardOpen: 'row', mode: 'death', last: null,
-    disabled: [], pzCount: 6, voice: true
+    disabled: [], pzCount: 6, voice: true, tease: 1
   },
   seats: [], occ: [], specials: {}, roles: {}, assign: [], stats: {}, buffs: {},
   phase: 'idle', runMode: null, skip: false, timers: [], seatEls: [], geom: null,
@@ -841,6 +859,8 @@ const SFX = (() => {
     stamp: () => { tone(150, 0, 0.3, 'sine', 0.7, 45); noise(0, 0.18, 0.4, 900, 0.7, 'lowpass'); },
     explode: () => { noise(0, 1.6, 0.9, 900, 0.6, 'lowpass', 60); tone(70, 0, 0.9, 'sine', 0.9, 28); tone(140, 0, 0.3, 'square', 0.2, 40); },
     fuse: (k) => tone(900 + k * 18, 0, 0.04, 'square', 0.06),
+    hmm: () => tone(300, 0, 0.3, 'triangle', 0.14, 560),
+    shutter: () => { noise(0, 0.04, 0.6, 5000, 1, 'highpass'); noise(0.13, 0.05, 0.5, 4000, 1, 'highpass'); },
     heartbeat: () => { tone(70, 0, 0.16, 'sine', 0.8, 40); tone(62, 0.22, 0.2, 'sine', 0.7, 38); },
     siren: () => { for (let k = 0; k < 3; k++) { tone(620, k * 0.46, 0.23, 'sawtooth', 0.09, 940); tone(940, k * 0.46 + 0.23, 0.23, 'sawtooth', 0.09, 620); } },
     drumroll: (dur) => {
@@ -1262,6 +1282,26 @@ const REACTIONS = {
   center: ['クラスのど真ん中！ 360°囲まれ席！', 'ど真ん中！ みんなの中心だ！']
 };
 
+/* ---- じらし演出のヘルパー ---- */
+const tease = () => +S.cfg.tease || 0;
+const setTense = on => document.body.classList.toggle('tense', !!on);
+// 名字だけ先に見せる → 名前
+async function revealHalf(name, cls = 'slot', sub = 'まさか……！？') {
+  const parts = String(name).split(/\s+/);
+  if (parts.length < 2) return;
+  setTense(true);
+  setAnn(`${parts[0]} ……`, sub, cls); SFX.heartbeat(); await wait(1100);
+  if (S.skip) return setTense(false);
+  SFX.heartbeat(); await wait(800 + tease() * 300);
+  setTense(false);
+}
+// わざと別の名前で止めて「…と見せかけて！」
+async function fakeOut(wrong, sub = '……決定！？') {
+  setAnn(wrong, sub, 'locked'); SFX.stamp(); await wait(1100); if (S.skip) return;
+  setAnn(wrong, '……ん？', 'slot glitch fake'); SFX.hmm(); await wait(800); if (S.skip) return;
+  setAnn('と見せかけて……！！', '', 'warn'); SFX.whoosh(); VOICE.say('と見せかけて！'); await wait(1000);
+}
+
 async function runDeath() {
   renderGrid('blank');
   grid.classList.add('dim');
@@ -1299,6 +1339,12 @@ async function runDeath() {
       await waitAbs(40 + 260 * f * f);
     }
     if (S.skip) return;
+    // じらし：フェイント／名字だけ先に
+    const T = tease(), fakes = Array.from(remaining).filter(n => n !== name);
+    // 爆速のときは注目席だけじらす
+    const fakeP = T === 0 ? 0 : sp ? (T === 2 ? 0.9 : 0.55) : S.cfg.speed === 'turbo' ? 0 : (T === 2 ? 0.3 : 0.1);
+    if (fakes.length && Math.random() < fakeP) { await fakeOut(pick(fakes)); if (S.skip) return; }
+    if (T > 0 && (sp || (T === 2 && S.cfg.speed !== 'turbo' && Math.random() < 0.3))) { await revealHalf(name); if (S.skip) return; }
     setAnn(name, sp ? pick(REACTIONS[sp.key]) : `${seatDesc(s)} に決定！`, 'locked');
     VOICE.say(sp ? `${sp.label}は、${name}さん！` : `${name}さん`);
     SFX.stamp(); fillSeat(s.i, 'stamp'); remaining.delete(name); el.classList.remove('spot');
@@ -1326,6 +1372,11 @@ async function runRpg() {
     const role = ROLES[key];
     members.forEach(s => S.seatEls[s.i].classList.add('zone-hl'));
     SFX.encounter();
+    if (key === 'hero' && tease() > 0) {
+      setTense(true); await typeAnn('……そして', ''); await wait(700);
+      await typeAnn('でんせつの ゆうしゃ の せきに すわるのは……'); SFX.heartbeat(); await wait(1200 + 400 * tease()); setTense(false);
+      if (S.skip) return;
+    }
     await typeAnn(`【${role.icon} ${role.name}】`, role.desc);
     await wait(700);
     members.forEach(s => S.seatEls[s.i].classList.remove('zone-hl'));
@@ -1388,6 +1439,11 @@ async function runRace() {
   for (let k = 0; k < order.length; k++) {
     if (S.skip) return;
     const s = order[k], t = toks[s.i], sp = S.specials[s.i];
+    if (tease() > 0 && (sp || k === order.length - 1)) { // 写真判定
+      setTense(true); SFX.shutter(); bigText('📸', false, '#ffffff');
+      setAnn('📸 写真判定中……', sp ? `${sp.icon} ${sp.label}に飛び込んだのは……！？` : '最後の1頭は……！？');
+      await wait(1200 + 500 * tease()); setTense(false); if (S.skip) return;
+    }
     finished.add(s.i);
     const er = S.seatEls[s.i].getBoundingClientRect();
     const x = er.left - sr.left + er.width / 2 - t.w / 2, y = er.top - sr.top + er.height / 2 - t.h / 2;
@@ -1414,6 +1470,11 @@ async function runCard() {
     grid.classList.add('shaking'); SFX.drumroll(3.2 * sf);
     await waitAbs(3200 * sf);
     grid.classList.remove('shaking'); if (S.skip) return;
+    if (tease() > 0) { // シーン……からのカウントダウン
+      setTense(true); setAnn('…………', '（シーン……）'); await wait(1300 * tease()); if (S.skip) return setTense(false);
+      for (const n of ['3', '2', '1']) { bigText(n, false, '#f5c542'); SFX.heartbeat(); await wait(800); if (S.skip) return setTense(false); }
+      setTense(false);
+    }
     S.seatEls.forEach(el => el.classList.remove('flipped'));
     bigText('OPEN!!', true, '#f5c542'); fx.big(); VOICE.say('オープン！');
     setAnn('オープン！！！', '新しい席はここだ！'); await wait(1600);
@@ -1426,6 +1487,14 @@ async function runCard() {
       els.forEach(el => el.classList.add('shake')); SFX.drumroll(d);
       await waitAbs(d * 1000);
       els.forEach(el => el.classList.remove('shake')); if (S.skip) return;
+      if (r === 0 && tease() > 0) { // チラ見せ → まだ早い！
+        for (let t = 0; t < tease(); t++) {
+          setAnn('チラッ……', ''); els.forEach(el => el.classList.add('peek')); SFX.swish(); await wait(550);
+          els.forEach(el => el.classList.remove('peek')); setAnn('おっと！ まだ早い！', t + 1 < tease() ? 'もう一回だけ……' : 'いくぞ……！'); SFX.hmm(); await wait(1000);
+          if (S.skip) return;
+        }
+        setTense(true); SFX.drumroll(1.5); await wait(1500); setTense(false); if (S.skip) return;
+      }
       els.forEach((el, k) => setTimeout(() => el.classList.remove('flipped'), k * 70));
       setTimeout(() => fx.at(els[Math.floor(els.length / 2)], r === 0 ? 160 : 60), 300);
       setAnn(`前から${r + 1}番目、オープン！`, ''); VOICE.say(r === 0 ? '最前列、オープン！' : 'オープン！');
@@ -1435,6 +1504,11 @@ async function runCard() {
     setAnn('⚡ 1枚ずつ連続オープン！', '');
     for (const s of shuffle(S.seats.slice())) {
       if (S.skip) return;
+      if (S.specials[s.i] && S.assign[s.i] && tease() > 0) {
+        const el = S.seatEls[s.i]; el.classList.add('shake'); setTense(true);
+        setAnn(`${S.specials[s.i].icon} ${S.specials[s.i].label} のカードは……`, ''); SFX.drumroll(1.3); await wait(1300);
+        el.classList.remove('shake'); setTense(false); if (S.skip) return;
+      }
       S.seatEls[s.i].classList.remove('flipped'); SFX.swish();
       if (S.assign[s.i]) setAnn(S.assign[s.i], S.specials[s.i] ? `${S.specials[s.i].icon} ${S.specials[s.i].label}！` : seatDesc(s));
       await wait(S.specials[s.i] ? 900 : 260);
@@ -1616,6 +1690,23 @@ async function runGacha() {
     setAnn(pick(['🔴', '🔵', '🟡', '🟢', '🟣']), `${k + 1}回目のガチャ…`, 'capsule');
     for (let t = 0; t < (r === 'SSR' ? 7 : r === 'SR' ? 4 : 2); t++) { SFX.tick(); await wait(110); }
     if (S.skip) return;
+    // じらし：昇格演出（青→紫→虹）と、まさかのハズレ金カプセル
+    const T = tease();
+    if (T > 0) {
+      const steps = r === 'SSR' ? ['R', 'SR'] : r === 'SR' && S.cfg.speed !== 'turbo' && Math.random() < (T === 2 ? 0.75 : 0.4) ? ['R'] : [];
+      const msg = { R: '……青く光った？', SR: '！？ 色が変わった……！！' };
+      for (const st of steps) {
+        setAnn('💊', msg[st], 'capsule r-' + st); (st === 'SR' ? SFX.siren : SFX.hint)();
+        if (r === 'SSR') setTense(true);
+        await wait(st === 'SR' ? 1200 : 850); if (S.skip) return setTense(false);
+      }
+      if (r === 'SSR') { setAnn('🌈', '虹色……！？ まさか…………', 'capsule r-SSR'); SFX.heartbeat(); await wait(1300); setTense(false); if (S.skip) return; }
+      if ((r === 'N' || r === 'R') && S.cfg.speed !== 'turbo' && Math.random() < (T === 2 ? 0.15 : 0.06)) {
+        setAnn('💊', '！？ 金色に光った……！', 'capsule r-SR'); SFX.siren(); await wait(1000); if (S.skip) return;
+        setAnn('💊', '……と思ったら、ふつうのカプセルでした', 'capsule r-N'); SFX.hmm(); await wait(900); if (S.skip) return;
+      }
+      if (r === 'SSR' && T > 0) { await revealHalf(name, 'r-SSR', 'SSR席を引き当てたのは……！'); if (S.skip) return; }
+    }
     if (r === 'SSR') { bigText('SSR', true, '#ffd23f'); SFX.siren(); await wait(900); if (S.skip) return; }
     VOICE.say(r === 'SSR' ? `SSR！ ${name}さん！` : r === 'SR' ? `SR、${name}さん` : name);
     setAnn(`${name}`, `【${r}】${RAR_TEXT[r]}　${S.specials[s.i] ? S.specials[s.i].icon + ' ' + S.specials[s.i].label : seatDesc(s)}`, 'r-' + r);
@@ -1650,7 +1741,8 @@ function finalize() {
   S.raceTimers.forEach(clearInterval); S.raceTimers = [];
   S.timers.forEach(x => clearTimeout(x.t)); S.timers = [];
   $('#tokenLayer').innerHTML = '';
-  grid.classList.remove('dim', 'shaking', 'guessing');
+  grid.classList.remove('dim', 'shaking', 'guessing'); setTense(false);
+  $$('.seat.peek,.seat.shake').forEach(el => el.classList.remove('peek', 'shake'));
   $('#puzzlePanel').classList.add('hidden'); PZ.target = null; PZ.hidden = new Set();
   S.phase = 'done'; S.skip = false;
   updateUI();
@@ -1687,10 +1779,13 @@ function updateUI() {
   $('#btnStart').disabled = running;
   $('#btnStart').textContent = S.phase === 'done' ? '🔁 もう一度！' : '▶ スタート！';
   $('#btnSkip').classList.toggle('hidden', !running);
+  $('#btnStart').classList.toggle('hidden', running); // 演出中はスタートの代わりにスキップを表示
   $('#afterbar').classList.toggle('hidden', S.phase !== 'done');
   $('#cardOptWrap').classList.toggle('hidden', S.cfg.mode !== 'card');
   $('#pzCountWrap').classList.toggle('hidden', S.cfg.mode !== 'puzzle');
   $('#pzCountSel').value = String(S.cfg.pzCount);
+  $('#teaseSel').value = String(S.cfg.tease ?? 1);
+  $('#teaseWrap').classList.toggle('hidden', S.cfg.mode === 'puzzle');
   ['#btnSettings', '#btnSecret'].forEach(id => $(id).disabled = running);
   grid.classList.toggle('clickable', S.phase === 'done');
   $('#speedSel').value = S.cfg.speed; $('#cardOpenSel').value = S.cfg.cardOpen;
@@ -2528,6 +2623,7 @@ $('#btnStart').addEventListener('click', startShow);
 $('#btnSkip').addEventListener('click', doSkip);
 $('#speedSel').addEventListener('change', e => { S.cfg.speed = e.target.value; saveCfg(); });
 $('#cardOpenSel').addEventListener('change', e => { S.cfg.cardOpen = e.target.value; saveCfg(); });
+$('#teaseSel').addEventListener('change', e => { S.cfg.tease = +e.target.value; saveCfg(); toast(['じらし：なし（テンポ重視）', 'じらし：ふつう', 'じらし：MAX（とことん、もったいぶる！）'][S.cfg.tease]); });
 $('#pzCountSel').addEventListener('change', e => { S.cfg.pzCount = +e.target.value; saveCfg(); });
 $('#pzHint').addEventListener('click', pzShowHint);
 $('#pzAnswer').addEventListener('click', () => {
